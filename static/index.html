@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b1220">
+<link rel="manifest" href="/static/manifest.webmanifest">
+<title>NEXUS | تحلیل کریپتو</title>
+<style>
+:root{--bg:#080e19;--panel:#111c2c;--panel2:#172438;--line:#26364d;--text:#edf3fb;--muted:#91a3bb;--gold:#d7b56d;--green:#35c78a;--red:#ef6574;--blue:#78a9ff}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% -10%,#1b2a42 0,transparent 35%),var(--bg);color:var(--text);font-family:Tahoma,Arial,sans-serif}
+.wrap{max-width:760px;margin:auto;padding:18px 14px 40px}
+header{display:flex;align-items:center;justify-content:space-between;margin:8px 2px 20px}
+.brand{display:flex;align-items:center;gap:10px}.logo{width:42px;height:42px;border-radius:14px;background:linear-gradient(145deg,#e6ca8c,#8d6b30);display:grid;place-items:center;color:#111;font-weight:900;font-size:18px}
+h1{font-size:21px;margin:0;letter-spacing:1px}.sub{color:var(--muted);font-size:11px;margin-top:4px}
+.pill{border:1px solid #315b4e;color:#7de0b3;background:#10271f;padding:7px 10px;border-radius:20px;font-size:11px}
+.notice{background:#2a2115;border:1px solid #58452a;color:#e9c98d;padding:11px 13px;border-radius:13px;font-size:11px;line-height:1.9;margin-bottom:15px}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.tab{border:1px solid var(--line);background:var(--panel);color:var(--muted);padding:12px;border-radius:12px;font-weight:bold}
+.tab.active{background:#26354b;border-color:var(--gold);color:#f2d99f}
+.card{background:linear-gradient(145deg,var(--panel),#0e1725);border:1px solid var(--line);border-radius:17px;padding:15px;margin-bottom:12px;box-shadow:0 10px 30px #0002}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.asset{font-size:14px;font-weight:bold}.price{font-size:23px;font-weight:800;direction:ltr;text-align:left;margin-top:8px}
+.muted{color:var(--muted);font-size:11px}.label{font-size:11px;color:var(--muted)}
+.signal{font-weight:bold;padding:7px 10px;border-radius:10px;font-size:11px;background:#283247;color:#d6dfeb}
+.signal.long{background:#123629;color:#71e0ae}.signal.short{background:#3a2028;color:#ff9eaa}
+.metrics{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-top:14px}
+.metric{background:var(--panel2);border-radius:12px;padding:11px;min-width:0}
+.metric strong{display:block;font-size:15px;margin-top:7px;direction:ltr;text-align:right;overflow-wrap:anywhere}
+.scoreline{height:7px;background:#26364a;border-radius:20px;overflow:hidden;margin-top:9px}.scorefill{height:100%;background:linear-gradient(90deg,#c39a4e,#46c58d);border-radius:20px}
+.reasons{padding:0 18px;margin:10px 0 0;color:#c5d1e0;font-size:12px;line-height:2}
+.actions{display:flex;gap:8px;margin:14px 0}
+button{font:inherit;cursor:pointer}.refresh{background:var(--gold);color:#17130b;border:0;border-radius:12px;padding:11px 15px;font-weight:bold;flex:1}
+.smallbtn{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:12px;padding:11px}
+.footer{text-align:center;color:#70829a;font-size:10px;line-height:2;margin-top:22px}
+.loading{color:var(--muted);text-align:center;padding:24px}.error{color:#ff9eaa;font-size:12px;line-height:1.8}
+.hidden{display:none}
+@media(min-width:600px){.metrics{grid-template-columns:repeat(4,1fr)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+ <div class="brand"><div class="logo">N</div><div><h1>NEXUS</h1><div class="sub">موتور تحلیل بازار فیوچرز USDT-M</div></div></div>
+ <span class="pill">نسخه آزمایشی ۰.۲</span>
+</header>
+<div class="notice">این نسخه فقط تحلیل و نمایش سیگنال انجام می‌دهد. هیچ سفارشی ثبت نمی‌کند. امتیاز سیگنال احتمال موفقیت نیست و قبل از استفاده مالی باید بک‌تست و دمو شود.</div>
+<div class="tabs">
+ <button class="tab active" data-asset="BTC">بیت‌کوین</button>
+ <button class="tab" data-asset="ETH">اتریوم</button>
+ <button class="tab" data-asset="SOL">سولانا</button>
+</div>
+<div id="content" class="loading">در حال دریافت داده‌های بازار از Toobit…</div>
+<div class="actions">
+ <button class="refresh" id="refresh">به‌روزرسانی تحلیل</button>
+ <button class="smallbtn" id="install" hidden>نصب اپ</button>
+</div>
+<div class="footer">NEXUS MVP · داده‌های قراردادهای دائمی Toobit · تحلیل بر اساس کندل‌های بسته‌شده<br>برای تأیید سیگنال، نمودار و شرایط اجرای واقعی را مستقل بررسی کن.</div>
+</div>
+<script>
+let selected="BTC", deferredPrompt=null;
+const $=s=>document.querySelector(s);
+function fmt(v){if(v===null||v===undefined)return "—";return Number(v).toLocaleString("en-US",{maximumFractionDigits:5});}
+function card(d){
+ const cls=d.signal==="LONG"?"long":d.signal==="SHORT"?"short":"";
+ const sig=d.signal==="LONG"?"خرید (LONG)":d.signal==="SHORT"?"فروش (SHORT)":"بدون سیگنال";
+ const metrics=[
+  ["روند ۱۵ دقیقه",d.trend],
+  ["امتیاز سیگنال",d.score+"/100"],
+  ["نسبت حجم",d.volume_ratio?fmt(d.volume_ratio)+"×":"—"],
+  ["ATR ۱۴",fmt(d.atr)],
+  ["ورود پیشنهادی",fmt(d.entry)],
+  ["حد ضرر",fmt(d.stop)],
+  ["حد سود",fmt(d.target)],
+  ["نسبت سود به ضرر",d.rr?"1 : "+d.rr:"—"]
+ ];
+ return `<div class="card">
+  <div class="row"><div><div class="asset">${d.asset} / USDT · ${d.contract}</div><div class="price">${fmt(d.price)} <span class="muted">USDT</span></div></div><span class="signal ${cls}">${sig}</span></div>
+  <div class="label" style="margin-top:10px">امتیاز بر اساس قواعد نسخه ۰.۲</div><div class="scoreline"><div class="scorefill" style="width:${Math.min(100,d.score)}%"></div></div>
+  <div class="metrics">${metrics.map(m=>`<div class="metric"><span class="label">${m[0]}</span><strong>${m[1]}</strong></div>`).join("")}</div>
+  <div style="margin-top:15px;font-weight:bold;font-size:12px">دلایل تحلیل</div><ul class="reasons">${d.reasons.map(x=>`<li>${x}</li>`).join("")}</ul>
+  <div class="muted" style="margin-top:12px">زمان آخرین کندل تحلیل‌شده: ${new Date(d.candle_time).toLocaleString("fa-IR")}</div>
+  <div class="muted" style="margin-top:6px">${d.warning}</div>
+ </div>`;
+}
+async function load(){
+ $("#content").innerHTML='<div class="loading">در حال تحلیل '+selected+'…</div>';
+ try{
+  const r=await fetch('/api/analysis?asset='+selected,{cache:"no-store"});
+  const d=await r.json();
+  if(!r.ok)throw new Error(d.detail||"خطا در دریافت اطلاعات");
+  $("#content").innerHTML=card(d);
+ }catch(e){$("#content").innerHTML='<div class="card error">دریافت اطلاعات ناموفق بود: '+e.message+'<br>اتصال سرور به API صرافی را بررسی کن.</div>';}
+}
+document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{
+ document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+ b.classList.add("active");selected=b.dataset.asset;load();
+}));
+$("#refresh").addEventListener("click",load);
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredPrompt=e;$("#install").hidden=false;});
+$("#install").addEventListener("click",async()=>{if(!deferredPrompt)return;deferredPrompt.prompt();deferredPrompt=null;$("#install").hidden=true;});
+if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("/static/sw.js").catch(()=>{}));
+load();
+setInterval(load,30000);
+</script>
+</body></html>
